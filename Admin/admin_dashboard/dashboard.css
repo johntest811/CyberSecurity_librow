@@ -1,0 +1,127 @@
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background-color: #333;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .navbar img {
+            max-height: 50px;
+        }
+
+        .table-container {
+            margin-top: 30px;
+        }
+
+        table {
+            width: 1200px;
+            border-collapse: collapse;
+            margin-top: 20px;
+            margin-left: 240px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #333;
+            color: white;
+        }
+
+        .sidenav {
+            height: 100%;
+            width: 200px;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #111;
+            overflow-x: hidden;
+            padding-top: 20px;
+        }
+
+        .sidenav a {
+            padding: 6px 8px 6px 16px;
+            text-decoration: none;
+            font-size: 20px;
+            color: #818181;
+            display: block;
+        }
+
+        .sidenav a:hover {
+            color: #f1f1f1;
+        }
+
+        .main {
+            margin-left: 200px;
+            /* Same width as the sidebar */
+            padding: 0px 10px;
+        }
+
+        .action-buttons {
+            margin-top: 20px;
+            margin-left: 1300px;
+        }
+
+        .action-buttons button {
+            margin-right: 15px;
+        }
+
+        .main-footer {
+            background-color: #333;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            position: relative;
+            margin-top: 30px; /* Adjusted margin for space gap */
+        }
+
+        .social-media {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .social-icon {
+            margin: 0 10px;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .social-icon:hover {
+            color: #55acee; /* Twitter blue */
+        }
+
+        .facebook-icon:hover {
+            color: #3b5998; /* Facebook blue */
+        }
+
+        .linkedin-icon:hover {
+            color: #0077b5; /* LinkedIn blue */
+        }
+
+        .instagram-icon:hover {
+            background: linear-gradient(45deg, #405de6, #5851db, #833ab4, #c13584, #e1306c, #fd1d1d);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .copyright-footer {
+            background-color: #ddd;
+            padding: 10px 0;
+            text-align: center;
+            position: relative;
+            font-size: 14px;
+        }

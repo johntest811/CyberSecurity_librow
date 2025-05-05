@@ -1,0 +1,270 @@
+/* ===== Register and Login Interface by Mikhaela Louise Bernardo ====*/
+/* ===== Google Font Import - Poformsins ===== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+  
+/* ===== Disable aos animation delay on mobile devices ====*/
+  @media screen and (max-width: 768px) {
+    [data-aos-delay] {
+      transition-delay: 0 !important;
+    }
+  }
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* ===== Body ====*/
+
+body{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100%;
+    background: url("library-bg.jpg") center/cover no-repeat;
+
+  }
+
+  /* ===== Header ====*/
+header {
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  transition: all 0.5s;
+  z-index: 997;
+  padding: 0 10px;
+}
+
+/* ===== Navigation Bar ====*/
+
+.navbar {
+  height: 100px;
+  display: flex;
+  padding: 22px 0;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  justify-content: space-between;
+}
+
+.navbar .logo {
+    gap: 10px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.navbar .logo img {
+    width: 210px;
+    height: 60px;
+    border-radius: 50%;
+}
+
+.title{
+  color: white;
+}
+
+.navbar .links a{
+  color: rgb(255, 255, 255);
+  font-size: 18px;
+  font-weight: bold;
+  margin: 1.8rem;
+  font-family: "Raleway", sans-serif;
+  text-decoration: none;
+}
+
+.navbar .links a:hover{
+  color:#ffc451;
+}
+
+/* ===== Container Form ====*/
+
+.container{
+    position: relative;
+    max-width: 430px;
+    width: 100%;
+    background: #e188881a;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 0 20px;
+    margin-top: 50px;
+}
+
+.container .forms{
+    display: flex;
+    align-items: center;
+    height:530px;
+    width: 200%;
+    transition: height 0.2s ease;
+}
+
+
+.container .form{
+    width: 50%;
+    padding: 30px;
+    background-color: #2f2c2c8f;
+    transition: margin-left 0.18s ease;
+}
+
+.container.active .login{
+    margin-left: -50%;
+    opacity: 0;
+    transition: margin-left 0.18s ease, opacity 0.15s ease;
+}
+
+.container .signup{
+    opacity: 4s;
+    transition: opacity 0.09s ease;
+}
+
+.container.active .signup{
+    opacity: 4s;
+    transition: opacity 0.2s ease;
+}
+
+.container.active .forms{
+    height: 600px;
+}
+
+.container .form .title{
+    position: relative;
+    font-size: 30px;
+    font-weight: 600;
+    font-family: "Raleway", sans-serif;
+
+}
+
+.form .input-field{
+    position: relative;
+    height: 45px;
+    width: 100%;
+    margin-top: 30px;
+}
+
+.input-field input{
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    padding: 0 35px;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    font-family: "Raleway", sans-serif;
+    border-bottom: 2px solid #ccc;
+    border-top: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.input-field input:is(:focus, :valid){
+    border-bottom-color: #c08a54;
+}
+
+.input-field i{
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #515050;
+    font-size: 20px;
+    transition: all 0.2s ease;
+}
+
+.input-field input:is(:focus, :valid) ~ i{
+    color: #8b7a53;
+}
+
+.input-field i.icon{
+    left: 0.5pc;
+    top: 1.4pc;
+    color: #333;
+}
+
+.input-field i.showHidePw{
+    right: 0.4pc;
+    cursor: pointer;
+    padding: 10px;
+}
+
+.form .checkbox-text{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.checkbox-text .checkbox-content{
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-content input{
+    margin-right: 10px;
+    accent-color: #b18c5b;
+
+}
+
+select {
+    width: 100%;
+    height: 40px;
+    font-size: 16px;
+    font-weight: 500;
+    color: rgb(0, 0, 0);
+    font-family: "Raleway", sans-serif;
+  }
+  
+select option {
+    padding: 10px;
+    font-size: 14px;
+}
+
+.form .text{
+    font-size: 14px;
+    color: white;
+    font-family: "Raleway", sans-serif;
+}
+
+.form a.text{
+  color: white;
+  text-decoration: none;
+}
+
+.form a:hover{
+    text-decoration: underline;
+    color: #ffc451;
+}
+
+.form .button{
+    margin-top: 35px;
+}
+
+.form .button input{
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    border-radius: 6px;
+    background-color:  #eba027;
+    font-family: "Raleway", sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.button input:hover{
+    background-color: #ffc451;
+  
+}
+
+.form .login-signup{
+    margin-top: 30px;
+    text-align: center;
+}
+
+.Forgot-Password{
+
+    margin-top: 10%;
+
+}

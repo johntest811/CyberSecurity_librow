@@ -1,9 +1,65 @@
 <?php
-    include "admin/admin_library/connectionLibrary.php";
-    $query = "SELECT title, author, bookstock, image FROM librow.books, accounts";
-    $result = mysqli_query($link, $query);
-?>
+include "Admin/admin_account/connection.php";
+require_once 'security.php';
+require_once 'vendor/autoload.php';
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+startSecureSession();
+
+// Check for session timeout (15 minutes = 900 seconds)
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 900)) {
+    session_unset();
+    session_destroy();
+    header("Location: Login.php?timeout=1");
+    exit();
+}
+$_SESSION['last_activity'] = time();
+
+checkSession();
+
+
+$username = isset($_SESSION['user_email']) ? $_SESSION['user_email'] : $_SESSION['admin_email'];
+
+// para sa logout
+if (isset($_GET['action']) && $_GET['action'] === 'logout') {
+    logActivity($link, "User logout for $username");  
+    
+    // Send yung logout notification email
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'kolipojohn@gmail.com';
+        $mail->Password = 'btig wrnh vcgu jlyb';
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+
+        $mail->setFrom('kolipojohn@gmail.com', 'Librow Security');
+        $mail->addAddress($username);
+        $mail->isHTML(true);
+        $mail->Subject = 'Logout Notification';
+        $mail->Body = "Dear User,<br><br>You have been successfully logged out from your Librow account.<br><br>If this was not you, please contact support immediately.<br><br>Best regards,<br>Librow Security Team";
+        $mail->AltBody = "Dear User,\n\nYou have been successfully logged out from your Librow account.\n\nIf this was not you, please contact support immediately.\n\nBest regards,\nLibrow Security Team";
+
+        $mail->send();
+    } catch (Exception $e) {
+        error_log('Failed to send logout email: ' . $e->getMessage());
+    }
+    
+    session_destroy();
+    header("Location: Login.php");
+    exit();
+}
+
+
+$query = "SELECT title, author, bookstock, image FROM librow.books";
+$stmt = mysqli_prepare($link, $query);  
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -72,10 +128,10 @@
 <form class="d-flex">
     <button class="btn btn-outline-dark">
         <i class="bi bi-person"></i>
-        User: <b>Welcome</b>
+        User: <b><?php echo htmlspecialchars($username); ?></b>
     </button>
 </form>
-<form class="d-flex" action="Login.php">
+<form class="d-flex" action="Login.php" onclick="return confirm('Are you sure you want to logout?');">
     <button class="btn btn-outline-dark">
         <i class="bi bi-box-arrow-right"></i>
       <b>Logout</b>
@@ -87,7 +143,7 @@
     </div>
 </nav>
 
-<!-- Header-->
+
 <header class="bg-dark py-5">
     <div class="container px-4 px-lg-5 my-5">
         <div class="text-center text-white">
@@ -100,10 +156,10 @@
 <!-- Search Bar -->
 <form class="search-container" action="Shop.php" method="GET">
     <div class="input-group">
-        <!-- Add the name attribute to the input element -->
+      
         <input type="text" class="form-control" placeholder="Search for..." name="search">
         <span class="input-group-btn">
-            <!-- Add the type attribute to the search button -->
+           
             <button class="btn btn-secondary" type="submit">Search</button>
         </span>
     </div>
@@ -118,18 +174,18 @@
     <div class="container px-4 px-lg-5 mt-5">
         <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
             <?php
-                // Retrieve the search query from the $_GET superglobal
+                
                 $searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
 
-                // Modify the SQL query to include the search query and use DISTINCT
+              
                 $query = "SELECT DISTINCT title, author, bookstock, image FROM librow.books, accounts WHERE title LIKE '%$searchQuery%'";
 
-                // Execute the query
+          
                 $result = mysqli_query($link, $query);
 
                 // Loop through the query result to display books
                 while ($row = mysqli_fetch_assoc($result)) {
-                    // Retrieve book information from the row
+                   
                     $title = $row["title"];
                     $author = $row["author"];
                     $bookstock = $row["bookstock"];
@@ -150,10 +206,10 @@
                             <p class="card-text"><h6><b>Stock:</b> <?php echo $bookstock; ?></p></h6>
                         </div>
 
-                        <!-- <div class="card-footer"> -->
+                        
                         
                            
-                    <!-- Inside the while loop where the books are displayed -->
+                    
 <form action="Book.php" method="POST">
     <input type="hidden" name="title" value="<?php echo $title; ?>">
     <input type="hidden" name="author" value="<?php echo $author; ?>">
@@ -165,7 +221,7 @@
     </div>
 </form>
                         </div>
-                        <!-- </div> -->
+                       
 
                     </div>
                 </div>

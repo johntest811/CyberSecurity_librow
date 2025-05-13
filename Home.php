@@ -1,16 +1,64 @@
 <?php
-session_start();
 
-// Check if user is logged in
-if (!isset($_SESSION['user_email']) && !isset($_SESSION['admin_email'])) {
+include "Admin/admin_account/connection.php";
+require_once 'security.php';
+require_once 'vendor/autoload.php';  
+
+
+use PHPMailer\PHPMailer\PHPMailer;  
+use PHPMailer\PHPMailer\Exception;   
+
+startSecureSession();
+
+
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 900)) {
+  
+    session_unset();     
+    session_destroy();   
+    header("Location: Login.php?timeout=1"); 
+    exit();
+}
+$_SESSION['last_activity'] = time(); 
+
+checkSession();
+
+
+$username = isset($_SESSION['user_email']) ? $_SESSION['user_email'] : $_SESSION['admin_email'];
+$profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'assets/img/default-profile.png';
+
+
+if (isset($_GET['action']) && $_GET['action'] === 'logout') {
+    logActivity($link, "User logout for $username");
+    
+    // Send logout notification
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'kolipojohn@gmail.com';
+        $mail->Password = 'btig wrnh vcgu jlyb';
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+
+        $mail->setFrom('kolipojohn@gmail.com', 'Librow Security');
+        $mail->addAddress($username);
+        $mail->isHTML(true);
+        $mail->Subject = 'Logout Notification';
+        $mail->Body = "Dear User,<br><br>You have been logged out from Librow.<br><br>Best regards,<br>Librow Security Team";
+        $mail->send();
+    } catch (Exception $e) {
+        error_log('Failed to send logout email: ' . $e->getMessage());
+    }
+    
+    session_destroy();
     header("Location: Login.php");
     exit();
 }
-
-// Determine username and profile image
-$username = isset($_SESSION['user_email']) ? $_SESSION['user_email'] : $_SESSION['admin_email'];
-$profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'assets/img/default-profile.png';
 ?>
+
+<!DOCTYPE html>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -26,11 +74,9 @@ $profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'ass
   <!-- Favicons -->
   <link href="assets/img/logo librow.png" rel="icon">
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
-
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,600,600i,700,700i|Raleway:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
 
-  <!-- Vendor CSS Files -->
+
   <link href="assets/vendor/aos/aos.css" rel="stylesheet">
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
@@ -39,7 +85,7 @@ $profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'ass
   <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
   <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
 
-  <!-- Template Main CSS File -->
+ 
   <link href="assets/css/style.css" rel="stylesheet">
 </head>
 
@@ -65,10 +111,10 @@ $profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'ass
           <i class="bi bi-person" style="color: #fff; font-size: 20px; margin-right: 8px;"></i>
           <span class="username" style="color: #fff; font-family: 'Raleway', sans-serif; font-size: 15px; font-weight: 600;"><?php echo htmlspecialchars($username); ?></span>
         </div>
-        <a href="Login.php" class="get-started-btn scrollto">Logout </a>
+        <a href="javascript:void(0);" onclick="confirmLogout();" class="get-started-btn scrollto">Logout</a>
       </div>
     </div>
-  </header><!-- End Header -->
+  </header>
 
   <!-- ======= Hero Section ======= -->
   <section id="hero" class="d-flex align-items-center justify-content-center">
@@ -119,7 +165,7 @@ $profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'ass
           </div>
         </div>
       </div>
-    </section><!-- End About Section -->
+    </section>
 
     <!-- ======= Features Section ======= -->
     <section id="features" class="features">
@@ -150,7 +196,7 @@ $profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'ass
           </div>
         </div>
       </div>
-    </section><!-- End Features Section -->
+    </section>
 
     <!-- ======= Services Section ======= -->
     <section id="services" class="services">
@@ -183,7 +229,7 @@ $profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'ass
           </div>
         </div>
       </div>
-    </section><!-- End Services Section -->
+    </section>
 
     <!-- ======= Cta Section ======= -->
     <section id="cta" class="cta">
@@ -194,7 +240,7 @@ $profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'ass
           <a class="cta-btn" href="Book.php">Browse Now!</a>
         </div>
       </div>
-    </section><!-- End Cta Section -->
+    </section>
 
     <!-- ======= Counts Section ======= -->
     <section id="counts" class="counts">
@@ -239,7 +285,7 @@ $profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'ass
           </div>
         </div>
       </div>
-    </section><!-- End Counts Section -->
+    </section>
 
     <!-- ======= Testimonials Section ======= -->
     <section id="testimonials" class="testimonials">
@@ -310,7 +356,7 @@ $profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'ass
           <div class="swiper-pagination"></div>
         </div>
       </div>
-    </section><!-- End Testimonials Section -->
+    </section>
 
     <!-- ======= Team Section ======= -->
     <section id="team" class="team">
@@ -432,7 +478,7 @@ $profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'ass
           </div>
         </section>
       </div>
-    </section><!-- End Team Section -->
+    </section>
 
     <!-- ======= Contact Section ======= -->
     <section id="contact" class="contact">
@@ -490,7 +536,7 @@ $profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'ass
           </div>
         </div>
       </div>
-    </section><!-- End Contact Section -->
+    </section>
 
   </main><!-- End #main -->
 
@@ -569,6 +615,14 @@ $profile_image = isset($_SESSION['user_image']) ? $_SESSION['user_image'] : 'ass
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <script>
+    function confirmLogout() {
+      if (confirm("Are you sure you want to logout?")) {
+        window.location.href = "Home.php?action=logout";
+      }
+    }
+  </script>
 
 </body>
 

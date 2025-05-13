@@ -1,9 +1,9 @@
 <?php
-ob_start(); // Start output buffering to prevent stray output
+ob_start(); 
 session_start();
-include "DataBase.php"; // Updated to use the provided Database.php
+include "DataBase.php"; 
+include "Admin/admin_account/connection.php";
 
-// Ensure database connection is available
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }

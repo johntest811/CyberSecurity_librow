@@ -24,7 +24,7 @@ if (isset($_POST['verify'])) {
     $storedCode = $_SESSION['verification_code'] ?? '';
 
     if ($inputCode === $storedCode) {
-        unset($_SESSION['verification_code']); // Clear code after successful verification
+        unset($_SESSION['verification_code']); 
         header("Location: $redirectUrl");
         exit();
     } else {
@@ -33,7 +33,7 @@ if (isset($_POST['verify'])) {
 }
 
 if (isset($_POST['resend'])) {
-    $name = 'User'; // Default name, can be fetched from database if needed
+    $name = 'User'; 
     $query = "SELECT Name FROM accounts WHERE email = ? UNION SELECT Name FROM adminaccounts WHERE email = ?";
     $stmt = mysqli_prepare($conn, $query);
     mysqli_stmt_bind_param($stmt, "ss", $email, $email);
@@ -52,8 +52,8 @@ if (isset($_POST['resend'])) {
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'kolipojohn@gmail.com'; // Replace with your Gmail address
-        $mail->Password = 'btig wrnh vcgu jlyb'; // Replace with your Gmail app-specific password
+        $mail->Username = 'kolipojohn@gmail.com'; 
+        $mail->Password = 'btig wrnh vcgu jlyb'; 
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 

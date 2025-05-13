@@ -2,8 +2,9 @@
 session_start();
 include "Database.php";
 include "Admin/admin_account/connection.php";
+include "security.php";
 
-// Check if Composer's autoloader exists
+// PARA SA Composer's 
 if (!file_exists('vendor/autoload.php')) {
     die("Error: Composer autoloader not found. Please run 'composer install' in the project directory to install required dependencies (e.g., otphp/otphp, league/oauth2-client, and phpmailer/phpmailer).");
 }
@@ -13,14 +14,14 @@ use League\OAuth2\Client\Provider\Google;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Google OAuth Configuration
+// PARA SA Google OAuth Configuration
 $google = new Google([
     'clientId'     => '495978947642-tbvnfgu8cfef529abuk78ts337a7drmh.apps.googleusercontent.com',
     'clientSecret' => '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',
     'redirectUri'  => 'http://localhost/CyberSecurity_librow/Login.php',
 ]);
 
-// Check if user is in cooldown at page load
+// Check PARA SA user is in cooldown
 $ip = $_SERVER['REMOTE_ADDR'];
 $email = isset($_SESSION['last_attempted_email']) ? $_SESSION['last_attempted_email'] : '';
 $sessionKey = 'login_attempts_' . $ip . '_' . $email;
@@ -33,7 +34,7 @@ if ($attempts >= 3 && isset($_SESSION['cooldown_end']) && time() < $_SESSION['co
     $isInCooldown = true;
 }
 
-// Handle cleanup request after cooldown
+
 if (isset($_GET['action']) && $_GET['action'] === 'clear_attempts' && isset($_GET['ip']) && isset($_GET['email'])) {
     $ipToClear = $_GET['ip'];
     $emailToClear = $_GET['email'];
@@ -79,20 +80,30 @@ if (!isset($_GET['code'])) {
             mysqli_stmt_bind_param($insertStmt, "ssss", $name, $email, $encryptedPassword, $encryptedPassword);
             mysqli_stmt_execute($insertStmt);
         }
-        // For Google SSO, send verification code
-        $verificationCode = sprintf("%06d", mt_rand(100000, 999999)); // 6-digit code
-        $_SESSION['verification_code'] = $verificationCode;
+        startSecureSession();
         $_SESSION['user_email'] = $email;
+        $_SESSION['last_activity'] = time();
+
+      
+        if (checkNewIP($conn, $email, $ip)) {
+            sendSuspiciousActivityEmail($email, $name, $ip);
+        }
+
+       
+        logActivity($conn, "Google SSO Login successful for $email from IP $ip");
+
+        // Send verification code
+        $verificationCode = sprintf("%06d", mt_rand(100000, 999999));
+        $_SESSION['verification_code'] = $verificationCode;
         $_SESSION['redirect_after_verify'] = 'Home.php';
 
-        // Send verification email
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
             $mail->Host = 'smtp.gmail.com';
             $mail->SMTPAuth = true;
-            $mail->Username = 'kolipojohn@gmail.com'; // Replace with your Gmail address
-            $mail->Password = 'btig wrnh vcgu jlyb'; // Replace with your Gmail app-specific password
+            $mail->Username = 'kolipojohn@gmail.com';
+            $mail->Password = 'btig wrnh vcgu jlyb';
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = 587;
 
@@ -137,7 +148,7 @@ function clearOldAttempts($conn, $ip, $email) {
 function sendIntrusionAlert($conn, $ip, $email) {
     $sessionKey = 'alert_sent_' . $ip . '_' . $email;
     if (isset($_SESSION[$sessionKey]) && $_SESSION[$sessionKey] === true) {
-        return; // Alert already sent, skip sending another
+        return;
     }
 
     $query = "SELECT DISTINCT email FROM login_attempts WHERE ip_address = ? AND success = 0 AND email IS NOT NULL LIMIT 1";
@@ -152,8 +163,8 @@ function sendIntrusionAlert($conn, $ip, $email) {
             $mail->isSMTP();
             $mail->Host = 'smtp.gmail.com';
             $mail->SMTPAuth = true;
-            $mail->Username = 'kolipojohn@gmail.com'; // Replace with your Gmail address
-            $mail->Password = 'btig wrnh vcgu jlyb'; // Replace with your Gmail app-specific password
+            $mail->Username = 'kolipojohn@gmail.com';
+            $mail->Password = 'btig wrnh vcgu jlyb';
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = 587;
 
@@ -166,9 +177,9 @@ function sendIntrusionAlert($conn, $ip, $email) {
             $mail->AltBody = "Dear User,\n\nOur system has detected 3 failed login attempts from your IP address ($ip). This may indicate a potential security breach. For your safety, your account has been temporarily restricted for 20 seconds.\n\nPlease contact support if you did not initiate these attempts.\n\nBest regards,\nLibrow Security Team";
 
             $mail->send();
-            $_SESSION[$sessionKey] = true; // Mark alert as sent
+            $_SESSION[$sessionKey] = true;
         } catch (Exception $e) {
-            // Log error but continue
+            
         }
     }
 }
@@ -181,7 +192,7 @@ function logAttempt($conn, $ip, $email, $success) {
 }
 
 function sendVerificationCode($email, $name, $conn, $ip) {
-    $verificationCode = sprintf("%06d", mt_rand(100000, 999999)); // 6-digit code
+    $verificationCode = sprintf("%06d", mt_rand(100000, 999999));
     $_SESSION['verification_code'] = $verificationCode;
 
     $mail = new PHPMailer(true);
@@ -189,8 +200,8 @@ function sendVerificationCode($email, $name, $conn, $ip) {
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'kolipojohn@gmail.com'; // Replace with your Gmail address
-        $mail->Password = 'btig wrnh vcgu jlyb'; // Replace with your Gmail app-specific password
+        $mail->Username = 'kolipojohn@gmail.com';
+        $mail->Password = 'btig wrnh vcgu jlyb';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 
@@ -211,20 +222,17 @@ function sendVerificationCode($email, $name, $conn, $ip) {
 if (isset($_POST["login"])) {
     $ip = $_SERVER['REMOTE_ADDR'];
     $email = mysqli_real_escape_string($conn, $_POST["email"]);
-    $_SESSION['last_attempted_email'] = $email; // Store email for cooldown check on page load
+    $_SESSION['last_attempted_email'] = $email;
     $password = $_POST["Password"];
 
-    // Track password attempt count per session
     $sessionKey = 'login_attempts_' . $ip . '_' . $email;
     $attempts = $_SESSION[$sessionKey] ?? 0;
 
-    // Check if user is in cooldown
     if ($attempts >= 3) {
         if (!isset($_SESSION['cooldown_end']) || time() >= $_SESSION['cooldown_end']) {
-            // Cooldown has ended, reset attempts and clear old failed attempts
             $_SESSION[$sessionKey] = 0;
             unset($_SESSION['cooldown_end']);
-            unset($_SESSION['alert_sent_' . $ip . '_' . $email]); // Reset alert sent flag
+            unset($_SESSION['alert_sent_' . $ip . '_' . $email]);
             clearOldAttempts($conn, $ip, $email);
         } else {
             $remaining = $_SESSION['cooldown_end'] - time();
@@ -245,15 +253,23 @@ if (isset($_POST["login"])) {
     if (mysqli_num_rows($adminResult) > 0) {
         $admin = mysqli_fetch_assoc($adminResult);
         if (password_verify($password, $admin['Password'])) {
-            logAttempt($conn, $ip, $email, 1);
+            startSecureSession();
             $_SESSION['admin_email'] = $email;
+            $_SESSION['last_activity'] = time();
             $_SESSION['redirect_after_verify'] = 'admin/admin_dashboard/admin_dashboard1.php';
 
-            // Send verification code
+            
+            if (checkNewIP($conn, $email, $ip)) {
+                sendSuspiciousActivityEmail($email, $admin['Name'] ?? 'Admin', $ip);
+            }
+
+            // Log successful login
+            logActivity($conn, "Admin login successful for $email from IP $ip");
+
             if (sendVerificationCode($email, $admin['Name'] ?? 'Admin', $conn, $ip)) {
-                unset($_SESSION[$sessionKey]); // Reset session attempts
-                unset($_SESSION['alert_sent_' . $ip . '_' . $email]); // Reset alert sent flag
-                clearOldAttempts($conn, $ip, $email); // Clear failed attempts
+                unset($_SESSION[$sessionKey]);
+                unset($_SESSION['alert_sent_' . $ip . '_' . $email]);
+                clearOldAttempts($conn, $ip, $email);
                 header("Location: verify_login.php");
                 exit();
             } else {
@@ -263,7 +279,7 @@ if (isset($_POST["login"])) {
         }
     }
 
-    // Check user login
+    //user login
     $userQuery = "SELECT * FROM accounts WHERE email = ?";
     $stmt = mysqli_prepare($conn, $userQuery);
     mysqli_stmt_bind_param($stmt, "s", $email);
@@ -273,15 +289,23 @@ if (isset($_POST["login"])) {
         $user = mysqli_fetch_assoc($userResult);
         $decryptedPassword = openssl_decrypt($user['Password'], 'AES-256-CBC', '8J2k9xPqW3mZ7rT4vN6bY8cL2hF5jD', 0, 'K9mW3xPqJ2rT7vN6');
         if ($decryptedPassword && password_verify($password, $decryptedPassword)) {
-            logAttempt($conn, $ip, $email, 1);
+            startSecureSession();
             $_SESSION['user_email'] = $email;
+            $_SESSION['last_activity'] = time();
             $_SESSION['redirect_after_verify'] = 'Home.php';
 
-            // Send verification code
+         
+            if (checkNewIP($conn, $email, $ip)) {
+                sendSuspiciousActivityEmail($email, $user['Name'] ?? 'User', $ip);
+            }
+
+            // KAPAG SUCCESSFUL Log successful login
+            logActivity($conn, "User login successful for $email from IP $ip");
+
             if (sendVerificationCode($email, $user['Name'] ?? 'User', $conn, $ip)) {
-                unset($_SESSION[$sessionKey]); // Reset session attempts
-                unset($_SESSION['alert_sent_' . $ip . '_' . $email]); // Reset alert sent flag
-                clearOldAttempts($conn, $ip, $email); // Clear failed attempts
+                unset($_SESSION[$sessionKey]);
+                unset($_SESSION['alert_sent_' . $ip . '_' . $email]);
+                clearOldAttempts($conn, $ip, $email);
                 header("Location: verify_login.php");
                 exit();
             } else {
@@ -291,11 +315,12 @@ if (isset($_POST["login"])) {
         }
     }
 
-    // Failed login attempt
+    // KAPAG NAG Failed login 
     $_SESSION[$sessionKey] = $attempts + 1;
     logAttempt($conn, $ip, $email, 0);
+    logActivity($conn, "Failed login attempt for $email from IP $ip", 0);
     if ($_SESSION[$sessionKey] >= 3) {
-        $_SESSION['cooldown_end'] = time() + 20; // 20-second cooldown
+        $_SESSION['cooldown_end'] = time() + 20;
         sendIntrusionAlert($conn, $ip, $email);
         $remaining = 20;
         echo "<script>
@@ -438,7 +463,6 @@ if (isset($_POST["login"])) {
 
 <script src="assetacc/account_script.js"></script>
 <script>
-    // Handle cooldown timer on page load or after failed attempt
     const urlParams = new URLSearchParams(window.location.search);
     let cooldownRemaining = <?php echo $cooldownRemaining; ?> || parseInt(urlParams.get('cooldown')) || 0;
     const cooldownMessage = document.getElementById('cooldownMessage');
@@ -459,9 +483,8 @@ if (isset($_POST["login"])) {
             loginButton.disabled = false;
             googleLogin.classList.remove('disabled');
             cooldownMessage.style.display = 'none';
-            window.history.replaceState({}, document.title, window.location.pathname); // Remove cooldown param from URL
+            window.history.replaceState({}, document.title, window.location.pathname);
 
-            // Clear login attempts from the database
             if (ip && email) {
                 fetch(`Login.php?action=clear_attempts&ip=${encodeURIComponent(ip)}&email=${encodeURIComponent(email)}`)
                     .then(response => response.json())
@@ -479,14 +502,11 @@ if (isset($_POST["login"])) {
         updateCooldown();
     }
 
-    // Handle form submission to prevent multiple rapid attempts
     document.querySelector('form').addEventListener('submit', function(e) {
         if (loginButton.disabled) {
             e.preventDefault();
         }
     });
 </script>
-
-<script src="assetacc/account_script.js"></script> 
 </body>
 </html>

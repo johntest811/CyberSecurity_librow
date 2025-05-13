@@ -1,7 +1,64 @@
 <?php
-    include "admin/admin_library/connectionLibrary.php";
-    $query = "SELECT title, author, bookstock, image FROM librow.books, accounts";
-    $result = mysqli_query($link, $query);
+include "Admin/admin_account/connection.php";
+require_once 'security.php';
+require_once 'vendor/autoload.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+startSecureSession();
+
+// Check for session timeout 
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 900)) {
+    session_unset();
+    session_destroy();
+    header("Location: Login.php?timeout=1");
+    exit();
+}
+$_SESSION['last_activity'] = time();
+
+checkSession();
+
+
+$username = isset($_SESSION['user_email']) ? $_SESSION['user_email'] : $_SESSION['admin_email'];
+
+
+if (isset($_GET['action']) && $_GET['action'] === 'logout') {
+    logActivity($link, "User logout for $username");  
+    
+ 
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'kolipojohn@gmail.com';
+        $mail->Password = 'btig wrnh vcgu jlyb';
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+
+        $mail->setFrom('kolipojohn@gmail.com', 'Librow Security');
+        $mail->addAddress($username);
+        $mail->isHTML(true);
+        $mail->Subject = 'Logout Notification';
+        $mail->Body = "Dear User,<br><br>You have been successfully logged out from your Librow account.<br><br>If this was not you, please contact support immediately.<br><br>Best regards,<br>Librow Security Team";
+        $mail->AltBody = "Dear User,\n\nYou have been successfully logged out from your Librow account.\n\nIf this was not you, please contact support immediately.\n\nBest regards,\nLibrow Security Team";
+
+        $mail->send();
+    } catch (Exception $e) {
+        error_log('Failed to send logout email: ' . $e->getMessage());
+    }
+    
+    session_destroy();
+    header("Location: Login.php");
+    exit();
+}
+
+
+$query = "SELECT title, author, bookstock, image FROM librow.books";
+$stmt = mysqli_prepare($link, $query);  
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 ?>
 
 <!DOCTYPE html>
@@ -29,7 +86,6 @@
     </head>
     <body>
 
-
          <!-- Main Nav Bar -->
          <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="container px-4 px-lg-5">
@@ -39,18 +95,9 @@
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
                         <li class="nav-item"><a class="nav-link" href="Home.php">Home</a></li>
                         <li class="nav-item"><a class="nav-link" href="Booking.php">Booking</a></li>
-                        <!-- <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" id="navbarDropdown" href="Shop.html" role="button" data-bs-toggle="dropdown" aria-expanded="false">Select</a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="Shop.html">All Books</a></li>
-                                <li><hr class="dropdown-divider" /></li>
-                                <li><a class="dropdown-item" href="#!">Popular Items</a></li>
-                                <li><a class="dropdown-item" href="#!">New Arrivals</a></li>
-                            </ul>
-                        </li> -->
                     </ul>
   
-                    <!-- Top Button -->           
+                 
              
                     <form class="d-flex" action="Book.php">
                         <button class="btn btn-outline-dark" type="submit">
@@ -68,27 +115,22 @@
                         </button>
                     </form>
   
-
-<!-- Display the user's name in the User button -->
-<form class="d-flex">
-    <button class="btn btn-outline-dark">
-        <i class="bi bi-person"></i>
-        User: <b>Welcome</b>
-    </button>
-</form>
-<form class="d-flex" action="account.php">
-    <button class="btn btn-outline-dark">
-        <i class="bi bi-box-arrow-right"></i>
-      <b>Logout</b>
-    </button>
-</form>
-
-
-  
+                    <!-- Display the user's name -->
+                    <form class="d-flex">
+                        <button class="btn btn-outline-dark">
+                            <i class="bi bi-person"></i>
+                            User: <b><?php echo htmlspecialchars($username); ?></b>
+                        </button>
+                    </form>
+                    <form class="d-flex" action="Home.php?action=logout" onclick="return confirm('Are you sure you want to logout?');">
+                        <button class="btn btn-outline-dark">
+                            <i class="bi bi-box-arrow-right"></i>
+                            <b>Logout</b>
+                        </button>
+                    </form>
                 </div>
             </div>
         </nav>
-
 
         <!-- Header-->
         <header class="bg-dark py-5">
@@ -100,104 +142,77 @@
             </div>
         </header>
 
-
-
         <div class="container text-center">
-    <div class="row justify-content-center">
-        <div class="card">
-            <div class="card-body">             
+            <div class="row justify-content-center">
+                <div class="card">
+                    <div class="card-body">             
+                        <?php
+                            // add book
+                            if (isset($_POST["addBook"])) {
+                                $title = $_POST["title"];
+                                $author = $_POST["author"];
+                                $bookstock = $_POST["bookstock"];
+                                $imagePath = $_POST["imagePath"];
 
-            <?php
-    // Start the session
- 
-    // add book
-    // Check if the "addBook" button was clicked
-    if (isset($_POST["addBook"])) {
-        $title = $_POST["title"];
-        $author = $_POST["author"];
-        $bookstock = $_POST["bookstock"];
-        $imagePath = $_POST["imagePath"];
+                                $book = array(
+                                    "title" => $title,
+                                    "author" => $author,
+                                    "bookstock" => $bookstock,
+                                    "imagePath" => $imagePath
+                                );
 
-        // Create an array to store the book information
-        $book = array(
-            "title" => $title,
-            "author" => $author,
-            "bookstock" => $bookstock,
-            "imagePath" => $imagePath
-        );
+                                if (isset($_SESSION["bookList"])) {
+                                    $_SESSION["bookList"][] = $book;
+                                } else {
+                                    $_SESSION["bookList"] = array($book);
+                                }
+                            }
 
-        // Check if the "bookList" session variable already exists
-        if (isset($_SESSION["bookList"])) {
-            // Append the new book to the existing list
-            $_SESSION["bookList"][] = $book;
-        } else {
-            // Create a new list with the current book
-            $_SESSION["bookList"] = array($book);
-        }
-    }
+                            if (isset($_POST["deleteBook"])) {
+                                $index = $_POST["bookIndex"];
+                                if (isset($_SESSION["bookList"][$index])) {
+                                    unset($_SESSION["bookList"][$index]);
+                                    $_SESSION["bookList"] = array_values($_SESSION["bookList"]);
+                                }
+                            }
+                        ?>
 
-    // Check if the "deleteBook" button was clicked
-    if (isset($_POST["deleteBook"])) {
-        // Get the index of the book to be deleted
-        $index = $_POST["bookIndex"];
+                        <h1>Selected Books</h1>
+                        <?php
+                            if (isset($_SESSION["bookList"]) && !empty($_SESSION["bookList"])) {
+                                foreach ($_SESSION["bookList"] as $index => $book) {
+                                    $title = $book["title"];
+                                    $author = $book["author"];
+                                    $bookstock = $book["bookstock"];
+                                    $imagePath = $book["imagePath"];
 
-        // Check if the book index is valid
-        if (isset($_SESSION["bookList"][$index])) {
-            // Remove the book from the list
-            unset($_SESSION["bookList"][$index]);
+                                    echo "<div>";
+                                    echo "<img src='$imagePath' alt='Book Image' height='260' width='250'>";
+                                    echo "<h3>Title: $title</h3>";
+                                    echo "<h4>Author: $author</h4>";
+                                    echo "<p>Stock: $bookstock</p>";
 
-            // Reset the array keys to maintain continuity
-            $_SESSION["bookList"] = array_values($_SESSION["bookList"]);
-        }
-    }
-?>
+                                    echo "<form action='Book.php' method='POST'>";
+                                    echo "<input type='hidden' name='bookIndex' value='$index'>";
+                                    echo "<button type='submit' class='btn btn-outline-danger' name='deleteBook'>Delete</button>";
+                                    echo "</form>";
 
-<!-- Display the selected books -->
-<h1>Selected Books</h1>
-<?php
-    // Check if the bookList session variable exists and is not empty
-    if (isset($_SESSION["bookList"]) && !empty($_SESSION["bookList"])) {
-        // Loop through the bookList to display the books
-        foreach ($_SESSION["bookList"] as $index => $book) {
-            $title = $book["title"];
-            $author = $book["author"];
-            $bookstock = $book["bookstock"];
-            $imagePath = $book["imagePath"];
-
-
-            echo "<div>";
-            echo "<img src='$imagePath' alt='Book Image' height='260' width='250'>";
-            echo "<h3>Title: $title</h3>";
-            echo "<h4>Author: $author</h4>";
-            echo "<p>Stock: $bookstock</p>";
-
-            // Add a form to delete the book
-            echo "<form action='Book.php' method='POST'>";
-            echo "<input type='hidden' name='bookIndex' value='$index'>";
-            echo "<button type='submit' class='btn btn-outline-danger' name='deleteBook'>Delete</button>";
-            echo "</form>";
-
-            echo "</div>";
-        }
-    } else {
-        echo "<p>No books selected.</p>";
-    }
-?>
-<br><br>
-<h2>Please Pick Up Your Book at This location</h2>
-<br>
-<div>
-          <iframe style="border:0; width: 100%; height: 400px;" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3860.620994345644!2d121.0480948!3d14.620653599999995!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397b7bf0a362b19%3A0xb7ef71e25faabd8!2sAurora%20Blvd%2C%20Quezon%20City%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1697432936386!5m2!1sen!2sph" frameborder="0" allowfullscreen></iframe>    
-        </div>
-             
+                                    echo "</div>";
+                                }
+                            } else {
+                                echo "<p>No books selected.</p>";
+                            }
+                        ?>
+                        <br><br>
+                        <h2>Please Pick Up Your Book at This location</h2>
+                        <br>
+                        <div>
+                            <iframe style="border:0; width: 100%; height: 400px;" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3860.620994345644!2d121.0480948!3d14.620653599999995!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397b7bf0a362b19%3A0xb7ef71e25faabd8!2sAurora%20Blvd%2C%20Quezon%20City%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1697432936386!5m2!1sen!2sph" frameborder="0" allowfullscreen></iframe>    
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-
-
-      
-
 
         <!-- Footer-->
         <footer class="py-5 bg-dark">

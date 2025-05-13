@@ -22,7 +22,7 @@ require_once ("connection.php");
   margin: 0 auto;
   margin-left: 5%;
   margin-right: 5%;
-  max-width: 100%; /* Optional: Adjust the maximum width as needed */
+  max-width: 100%; 
 }
 </style>
 
@@ -40,7 +40,7 @@ require_once ("connection.php");
                   <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
                       <li class="nav-item"><a class="nav-link" href="HomeLogin.html">Home</a></li>
                       <li class="nav-item"><a class="nav-link" href="Booking.php">Booking</a></li>
-                      <li class="nav-item dropdown">
+                      <!-- <li class="nav-item dropdown">
                           <a class="nav-link dropdown-toggle" id="navbarDropdown" href="Shop.html" role="button" data-bs-toggle="dropdown" aria-expanded="false">Select</a>
                           <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                               <li><a class="dropdown-item" href="Shop.html">All Books</a></li>
@@ -48,7 +48,7 @@ require_once ("connection.php");
                               <li><a class="dropdown-item" href="#!">Popular Items</a></li>
                               <li><a class="dropdown-item" href="#!">New Arrivals</a></li>
                           </ul>
-                      </li>
+                      </li> -->
                   </ul>
 
                   <!-- Top Button -->           
@@ -69,7 +69,7 @@ require_once ("connection.php");
                       </button>
                   </form>
 
-                   <!-- Display the user's name in the User button -->
+                   <!-- Display the user's name -->
 <form class="d-flex">
     <button class="btn btn-outline-dark">
         <i class="bi bi-person"></i>
@@ -96,10 +96,10 @@ require_once ("connection.php");
       </div>
   </div>
 </header>
-<!-- Section-->
+
 <section class="py-5">
           
-       <!-- Section-->
+  
 <section class="py-5">
           
           <!-- Input Information Form aka TextBoxes -->

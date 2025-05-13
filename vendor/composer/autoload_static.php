@@ -13,13 +13,8 @@ class ComposerStaticInit20fa77abab9923a662ca57d698d34ff5
     );
 
     public static $prefixLengthsPsr4 = array (
-        'S' => 
-        array (
-            'Stripe\\' => 7,
-        ),
         'P' => 
         array (
-            'Psr\\Log\\' => 8,
             'Psr\\Http\\Message\\' => 17,
             'Psr\\Http\\Client\\' => 16,
             'PHPMailer\\PHPMailer\\' => 20,
@@ -37,14 +32,6 @@ class ComposerStaticInit20fa77abab9923a662ca57d698d34ff5
     );
 
     public static $prefixDirsPsr4 = array (
-        'Stripe\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/stripe/stripe-php/lib',
-        ),
-        'Psr\\Log\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
-        ),
         'Psr\\Http\\Message\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/http-factory/src',
@@ -77,16 +64,6 @@ class ComposerStaticInit20fa77abab9923a662ca57d698d34ff5
         ),
     );
 
-    public static $prefixesPsr0 = array (
-        'P' => 
-        array (
-            'PayPal' => 
-            array (
-                0 => __DIR__ . '/..' . '/paypal/rest-api-sdk-php/lib',
-            ),
-        ),
-    );
-
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
     );
@@ -96,7 +73,6 @@ class ComposerStaticInit20fa77abab9923a662ca57d698d34ff5
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit20fa77abab9923a662ca57d698d34ff5::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit20fa77abab9923a662ca57d698d34ff5::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit20fa77abab9923a662ca57d698d34ff5::$prefixesPsr0;
             $loader->classMap = ComposerStaticInit20fa77abab9923a662ca57d698d34ff5::$classMap;
 
         }, null, ClassLoader::class);
